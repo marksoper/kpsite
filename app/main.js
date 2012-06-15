@@ -1,3 +1,9 @@
+
+//
+// TODO: global reference for dev purposes -- remove this
+//
+var kp;
+
 require([
   // Global
   "app",
@@ -53,5 +59,11 @@ function(app, $, Backbone) {
       Backbone.history.navigate(href, true);
     }
   });
+
+  //
+  // TODO: global reference for dev purposes -- remove this
+  //
+  window.kp = app;
+  kp = app;
 
 });
