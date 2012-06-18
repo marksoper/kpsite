@@ -16,6 +16,9 @@ require([
 
 function(app, $, Backbone) {
 
+  // register modules
+  app.auth = auth;
+
   // Defining the application router, you can attach sub routers here.
   var Router = Backbone.Router.extend({
     routes: {
