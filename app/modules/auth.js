@@ -18,24 +18,25 @@ function() {
           // user has auth'd your app and is logged into Facebook
           FB.api('/me', function(me){
             if (me.name) {
-              document.getElementById('auth-displayname').innerHTML = me.name;
+              console.log("---loginFB success: " + JSON.stringify(me));
+              //document.getElementById('auth-displayname').innerHTML = me.name;
             }
           });
-          document.getElementById('auth-loggedout').style.display = 'none';
-          document.getElementById('auth-loggedin').style.display = 'block';
+          //document.getElementById('auth-loggedout').style.display = 'none';
+          //document.getElementById('auth-loggedin').style.display = 'block';
         } else {
           // user has not auth'd your app, or is not logged into Facebook
-          document.getElementById('auth-loggedout').style.display = 'block';
-          document.getElementById('auth-loggedin').style.display = 'none';
+          //document.getElementById('auth-loggedout').style.display = 'block';
+          //document.getElementById('auth-loggedin').style.display = 'none';
         }
       });
       // respond to clicks on the login and logout links
       document.getElementById('auth-loginlink').addEventListener('click', function(){
         FB.login();
       });
-      document.getElementById('auth-logoutlink').addEventListener('click', function(){
-        FB.logout();
-      });
+      //document.getElementById('auth-logoutlink').addEventListener('click', function(){
+      //  FB.logout();
+      //});
     };
   };
   Auth.loadFBSDK = function() {
