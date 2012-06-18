@@ -45,6 +45,11 @@ function(app, $, Backbone, Auth) {
 
     // Trigger the initial route and enable HTML5 History API support
     Backbone.history.start({ pushState: true });
+
+    // FB Auth
+    console.log("---loginFB() called --- TODO: add login buttons and remove this");
+    app.Auth.loginFB();
+    
   });
 
   // All navigation that is relative should be passed through the navigate
@@ -67,11 +72,6 @@ function(app, $, Backbone, Auth) {
       // calls this anyways.
       Backbone.history.navigate(href, true);
     }
-
-    // FB Auth
-    console.log("---loginFB() called --- TODO: add login buttons");
-    app.Auth.loginFB();
-
   });
 
   //
