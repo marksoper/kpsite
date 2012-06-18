@@ -69,6 +69,7 @@ function(app, $, Backbone, Auth) {
     }
 
     // FB Auth
+    console.log("---loginFB() called --- TODO: add login buttons");
     app.Auth.loginFB();
 
   });
