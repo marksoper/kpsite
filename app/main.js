@@ -7,10 +7,11 @@ var kp;
 require([
   // Global
   "app",
-
   // Libs
   "jquery",
-  "backbone"
+  "backbone",
+  // Modules
+  "modules/auth"
 ],
 
 function(app, $, Backbone) {
