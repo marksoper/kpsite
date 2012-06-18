@@ -17118,8 +17118,8 @@ function($, _, Backbone) {
 define('modules/auth',[
 ],
 function() {
-  var auth = {};
-  auth.initFBAuth = function() {
+  var Auth = {};
+  Auth.initFBAuth = function() {
     window.fbAsyncInit = function() {
       FB.init({
         appId      : '378081648918321', // App ID
@@ -17131,7 +17131,7 @@ function() {
       // Additional initialization code here
     };
   };
-  auth.loadFBSDK = function() {
+  Auth.loadFBSDK = function() {
     // Load the SDK Asynchronously
     (function(d){
        var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
@@ -17141,7 +17141,20 @@ function() {
        ref.parentNode.insertBefore(js, ref);
      }(document));
   };
-  return auth;
+  Auth.loginFB = function() {
+    FB.login(function(response) {
+      if (response.authResponse) {
+        console.log('Welcome!  Fetching your information.... ');
+        FB.api('/me', function(response) {
+          console.log('Good to see you, ' + response.name + '.');
+          console.log("---FB.login response: " + JSON.stringify(response));
+        });
+      } else {
+        console.log('User cancelled login or did not fully authorize.');
+      }
+    });
+  };
+  return Auth;
 });
 
 //
@@ -17159,10 +17172,15 @@ require([
   "modules/auth"
 ],
 
-function(app, $, Backbone) {
+function(app, $, Backbone, Auth) {
 
   // register modules
-  app.auth = auth;
+  app.Auth = Auth;
+
+  // init FB Auth
+  app.Auth.initFBAuth();
+  app.Auth.loadFBSDK();
+
 
   // Defining the application router, you can attach sub routers here.
   var Router = Backbone.Router.extend({
@@ -17207,6 +17225,10 @@ function(app, $, Backbone) {
       // calls this anyways.
       Backbone.history.navigate(href, true);
     }
+
+    // FB Auth
+    app.Auth.loginFB();
+
   });
 
   //

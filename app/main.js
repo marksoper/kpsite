@@ -14,10 +14,15 @@ require([
   "modules/auth"
 ],
 
-function(app, $, Backbone) {
+function(app, $, Backbone, Auth) {
 
   // register modules
-  app.auth = auth;
+  app.Auth = Auth;
+
+  // init FB Auth
+  app.Auth.initFBAuth();
+  app.Auth.loadFBSDK();
+
 
   // Defining the application router, you can attach sub routers here.
   var Router = Backbone.Router.extend({
@@ -62,6 +67,10 @@ function(app, $, Backbone) {
       // calls this anyways.
       Backbone.history.navigate(href, true);
     }
+
+    // FB Auth
+    app.Auth.loginFB();
+
   });
 
   //
