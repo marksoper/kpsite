@@ -11,7 +11,8 @@ require([
   "jquery",
   "backbone",
   // Modules
-  "modules/auth"
+  "modules/auth",
+  "modules/views/main"
 ],
 
 function(app, $, Backbone, Auth) {
@@ -29,9 +30,13 @@ function(app, $, Backbone, Auth) {
     routes: {
       "": "index"
     },
-
     index: function() {
-
+      var authView = new app.Views.Auth();
+      var mainView = new app.Views.Main();
+      mainView.addSubview(authView);
+      $("#container").html(mainView.render().el);
+      app.views = app.views || {};
+      app.views.main = mainView;
     }
   });
 
@@ -68,11 +73,5 @@ function(app, $, Backbone, Auth) {
       Backbone.history.navigate(href, true);
     }
   });
-
-  //
-  // TODO: global reference for dev purposes -- remove this
-  //
-  window.kp = app;
-  kp = app;
 
 });

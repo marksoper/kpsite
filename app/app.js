@@ -6,11 +6,14 @@ define([
 ],
 
 function($, _, Backbone) {
+
+  var templatePath = "app/templates/";
+
   // Localize or create a new JavaScript Template object.
   var JST = window.JST = window.JST || {};
 
   // Keep active application instances namespaced under an app object.
-  return _.extend({
+  var app = _.extend({
 
     // This is useful when developing if you don't want to use a
     // build process every time you change a template.
@@ -18,7 +21,7 @@ function($, _, Backbone) {
     // Delete if you are using a different template loading method.
     fetchTemplate: function(path) {
       // Append the file extension.
-      path += ".html";
+      path = templatePath + path + ".html";
 
       // Should be an instant synchronous way of getting the template, if it
       // exists in the JST object.
@@ -49,4 +52,19 @@ function($, _, Backbone) {
 
   // Mix Backbone.Events into the app object.
   }, Backbone.Events);
+
+  Backbone.View.prototype.render = function() {
+    var html = app.fetchTemplate(this.template)();
+    this.$el.html(html);
+    return this;
+  };
+
+  //
+  // TODO: global reference for dev purposes -- remove this
+  //
+  window.kp = app;
+  kp = app;
+
+  return app;
+
 });

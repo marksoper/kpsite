@@ -1,5 +1,6 @@
 
 define([
+  "./views/auth"
 ],
 function() {
   var Auth = {};

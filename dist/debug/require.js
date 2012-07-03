@@ -315,7 +315,13 @@ var requirejs, require, define;
 
 this['JST'] = this['JST'] || {};
 
+this['JST']['app/templates/auth.html'] = function(data) { return function (obj,_) {
+var __p=[],print=function(){__p.push.apply(__p,arguments);};with(obj||{}){__p.push('\n<div id="login">\n  Login With Facebook\n</div>');}return __p.join('');
+}(data, _)};
 
+this['JST']['app/templates/main.html'] = function(data) { return function (obj,_) {
+var __p=[],print=function(){__p.push.apply(__p,arguments);};with(obj||{}){__p.push('\n<div role="main" id="main">\n</div>');}return __p.join('');
+}(data, _)};
 
 /*!
  * jQuery JavaScript Library v1.7.2
@@ -17069,11 +17075,14 @@ define('app',[
 ],
 
 function($, _, Backbone) {
+
+  var templatePath = "app/templates/";
+
   // Localize or create a new JavaScript Template object.
   var JST = window.JST = window.JST || {};
 
   // Keep active application instances namespaced under an app object.
-  return _.extend({
+  var app = _.extend({
 
     // This is useful when developing if you don't want to use a
     // build process every time you change a template.
@@ -17081,7 +17090,7 @@ function($, _, Backbone) {
     // Delete if you are using a different template loading method.
     fetchTemplate: function(path) {
       // Append the file extension.
-      path += ".html";
+      path = templatePath + path + ".html";
 
       // Should be an instant synchronous way of getting the template, if it
       // exists in the JST object.
@@ -17112,10 +17121,44 @@ function($, _, Backbone) {
 
   // Mix Backbone.Events into the app object.
   }, Backbone.Events);
+
+  Backbone.View.prototype.render = function() {
+    var html = app.fetchTemplate(this.template)();
+    this.$el.html(html);
+    return this;
+  };
+
+  //
+  // TODO: global reference for dev purposes -- remove this
+  //
+  window.kp = app;
+  kp = app;
+
+  return app;
+
 });
 
 
+define('modules/views/auth',[
+  "app",
+  "backbone"
+],
+
+function(app, Backbone) {
+  
+  var Auth = Backbone.View.extend({
+    template: "auth"
+  });
+
+  app.Views = app.Views || {};
+  app.Views.Auth = Auth;
+
+  return Auth;
+
+});
+
 define('modules/auth',[
+  "./views/auth"
 ],
 function() {
   var Auth = {};
@@ -17181,6 +17224,43 @@ function() {
   return Auth;
 });
 
+
+define('modules/views/main',[
+  "app",
+  "backbone"
+],
+
+function(app, Backbone) {
+  
+  var Main = Backbone.View.extend({
+    template: "main",
+    initialize: function() {
+      this.subviews = [];
+    },
+    addSubview: function(view, container) {
+      container = container || "#main";
+      this.subviews.push({
+        view: view,
+        container: container
+      });
+    },
+    render: function() {
+      var self = this;
+      Backbone.View.prototype.render.call(this);
+      self.subviews.forEach(function(subview) {
+        self.$el.find(subview.container).html(subview.view.render().el);
+      });
+      return this;
+    }
+  });
+
+  app.Views = app.Views || {};
+  app.Views.Main = Main;
+
+  return Main;
+
+});
+
 //
 // TODO: global reference for dev purposes -- remove this
 //
@@ -17193,7 +17273,8 @@ require([
   "jquery",
   "backbone",
   // Modules
-  "modules/auth"
+  "modules/auth",
+  "modules/views/main"
 ],
 
 function(app, $, Backbone, Auth) {
@@ -17211,9 +17292,13 @@ function(app, $, Backbone, Auth) {
     routes: {
       "": "index"
     },
-
     index: function() {
-
+      var authView = new app.Views.Auth();
+      var mainView = new app.Views.Main();
+      mainView.addSubview(authView);
+      $("#container").html(mainView.render().el);
+      app.views = app.views || {};
+      app.views.main = mainView;
     }
   });
 
@@ -17250,12 +17335,6 @@ function(app, $, Backbone, Auth) {
       Backbone.history.navigate(href, true);
     }
   });
-
-  //
-  // TODO: global reference for dev purposes -- remove this
-  //
-  window.kp = app;
-  kp = app;
 
 });
 

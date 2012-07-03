@@ -270,6 +270,9 @@ div {
   overflow: hidden;
   margin: auto;
 }
+div#main {
+  padding: 20px;
+}
 div#login {
   text-align: center;
   background-color: #00c;
