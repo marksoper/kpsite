@@ -271,7 +271,9 @@ div {
   margin: auto;
 }
 div#login {
+  text-align: center;
   background-color: #00c;
   color: #fff;
+  font-weight: bold;
   width: 240px;
 }
