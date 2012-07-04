@@ -266,9 +266,15 @@ td { vertical-align: top; }
   p, h2, h3 { orphans: 3; widows: 3; }
   h2, h3 { page-break-after: avoid; }
 }
+body {
+  background-color: #ddd;
+}
 div {
   overflow: hidden;
   margin: auto;
+}
+div#header {
+  text-align: center;
 }
 div#main {
   padding: 20px;
