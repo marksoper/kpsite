@@ -266,18 +266,20 @@ td { vertical-align: top; }
   p, h2, h3 { orphans: 3; widows: 3; }
   h2, h3 { page-break-after: avoid; }
 }
-body {
-  background-color: #ddd;
-}
 div {
   overflow: hidden;
-  margin: auto;
+  margin: 0 auto;
 }
-div#header {
+div#splash {
   text-align: center;
+  background-color: #111;
 }
-div#main {
-  padding: 20px;
+body {
+  overflow: hidden;
+  background-color: #111;
+}
+div#logo {
+  margin-top: 60px;
 }
 div#login {
   text-align: center;
@@ -285,4 +287,15 @@ div#login {
   color: #fff;
   font-weight: bold;
   width: 240px;
+}
+div#main div#header {
+  text-align: center;
+  color: #ed1e79;
+  background-color: #aaa;
+  font-size: 160%;
+}
+div#main div#content {
+  color: #ddd;
+  text-align: center;
+  padding: 20px;
 }

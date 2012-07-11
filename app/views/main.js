@@ -7,6 +7,8 @@ define([
 
 function(app, Backbone) {
   
+  var logger = app.logging.getLogger("views/main.js");
+
   var Main = Backbone.View.extend({
     template: "main",
     // TODO: move into a layout based view
@@ -28,7 +30,11 @@ function(app, Backbone) {
     // TODO: move into a layout based view
     render: function() {
       var self = this;
-      Backbone.View.prototype.render.call(this);
+      logger.info("rendering main view with app.user: " + JSON.stringify(app.user.toJSON()));
+      var context = {
+        user: app.user.toJSON()
+      };
+      Backbone.View.prototype.render.call(this, context);
       self.subviews.forEach(function(subview) {
         self.$el.find(subview.container).html(subview.view.render().el);
       });

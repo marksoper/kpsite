@@ -320,7 +320,11 @@ var __p=[],print=function(){__p.push.apply(__p,arguments);};with(obj||{}){__p.pu
 }(data, _)};
 
 this['JST']['app/templates/main.html'] = function(data) { return function (obj,_) {
-var __p=[],print=function(){__p.push.apply(__p,arguments);};with(obj||{}){__p.push('\n<div role="main" id="main">\n</div>');}return __p.join('');
+var __p=[],print=function(){__p.push.apply(__p,arguments);};with(obj||{}){__p.push('\n<div role="main" id="main">\n  <div id="header">\n    Klothespin\n  </div>\n  <div id="content">\n    Hi ', user.name.full ,'\n  </div>\n</div>');}return __p.join('');
+}(data, _)};
+
+this['JST']['app/templates/splash.html'] = function(data) { return function (obj,_) {
+var __p=[],print=function(){__p.push.apply(__p,arguments);};with(obj||{}){__p.push('\n<div id="splash">\n  <div id="logo">\n    <img src="/assets/img/kplogo.png">\n  </div>\n</div>');}return __p.join('');
 }(data, _)};
 
 /*!
@@ -17067,14 +17071,110 @@ define("backbone", ["lodash","jquery","kinvey"], (function (global) {
     }
 }(this)));
 
+
+define('lib/logging',[
+  "lodash"
+],
+
+function(_) {
+
+  var logLevel = 1;
+  var moduleLogLevel = {};
+  var logger;
+
+  var consoleLog = function(txt) {
+    console.log(txt);
+  }; 
+
+  var levels = {
+    debug: {
+      level: 0,
+      output: consoleLog
+    },
+    info: {
+      level: 1,
+      output: consoleLog
+    },
+    warn: {
+      level: 2,
+      output: consoleLog
+    },
+    error: {
+      level: 3,
+      output: consoleLog
+    }
+  };
+
+  var logMessage = function(message) {
+    var output = levels[message[0]].output;
+    output(message[0] + ": " + message[1] + " - " + message[2]);
+  };
+
+  var log = function(levelName, prefix, message, data) {
+    var effectiveLogLevel = logLevel;
+    if (moduleLogLevel.hasOwnProperty(prefix)) {
+      effectiveLogLevel = moduleLogLevel[prefix];
+    }
+    if (levels[levelName].level < effectiveLogLevel) {
+      return;
+    }
+    logMessage(arguments);
+  };
+
+  var createWrapper = function(moduleName) {
+    var that = {};
+    var addPrefix = function(levelName) {
+      that[levelName] = function() {
+        log(levelName, moduleName, arguments[0], arguments[1]);
+      };
+    };
+    _.each(_.keys(levels), addPrefix);
+    return that;
+  };
+
+  //  TODO: set this up at some point
+  //
+  /*
+  var extractModuleName = function(callingModule) {
+    var parts = callingModule.split('/');
+    var index = parts.length - 1;
+    while ((index > 0) && (parts[index] !== 'src')) {
+      index -= 1;
+    }
+    return parts.slice(index + 1).join('/');
+  };
+  */
+
+  var getLogger = function(callingModule) {
+    //var moduleName = extractModuleName(callingModule.filename);
+    var moduleName = callingModule;
+    /*
+    logger.info('Creating logger', {
+      moduleName: moduleName
+    });
+    */
+    return createWrapper(moduleName);
+  };
+
+  logger = createWrapper('lib/logging.js');
+
+  return { 
+    getLogger: getLogger
+  };
+
+});
+
 define('app',[
   // Libs
   "jquery",
   "lodash",
-  "backbone"
+  "backbone",
+  "lib/logging"
 ],
 
-function($, _, Backbone) {
+function($, _, Backbone, logging) {
+
+  var logger = logging.getLogger("app.js");
 
   var templatePath = "app/templates/";
 
@@ -17112,21 +17212,21 @@ function($, _, Backbone) {
 
       // Ensure a normalized return value.
       return JST[path];
-    },
-
-    // Create a custom object with a nested Views object
-    module: function(additionalProps) {
-      return _.extend({ Views: {} }, additionalProps);
     }
 
   // Mix Backbone.Events into the app object.
   }, Backbone.Events);
 
-  Backbone.View.prototype.render = function() {
-    var html = app.fetchTemplate(this.template)();
+  Backbone.View.prototype.render = function(context) {
+    var html = app.fetchTemplate(this.template)(context);
     this.$el.html(html);
     return this;
   };
+
+  //
+  // logging
+  //
+  app.logging = logging;
 
   //
   // TODO: global reference for dev purposes -- remove this
@@ -17139,63 +17239,47 @@ function($, _, Backbone) {
 });
 
 
-define('modules/views/auth',[
-  "app",
-  "backbone"
-],
-
-function(app, Backbone) {
-  
-  var Auth = Backbone.View.extend({
-    template: "auth"
-  });
-
-  app.Views = app.Views || {};
-  app.Views.Auth = Auth;
-
-  return Auth;
-
-});
-
-define('modules/auth',[
-  "./views/auth"
+define('settings',[
 ],
 function() {
+  var settings = {
+    facebook: {
+      appId      : '378081648918321', // App ID
+      channelUrl : '//kp.marksoper.net/channel.html', // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    }
+  };
+  return settings;
+});
+
+define('auth',[
+  "app",
+  "settings"
+],
+
+function(app, settings) {
+  var logger = app.logging.getLogger("auth.js");
   var Auth = {};
   Auth.initFBAuth = function() {
     window.fbAsyncInit = function() {
-      FB.init({
-        appId      : '378081648918321', // App ID
-        channelUrl : '//kp.marksoper.net/channel.html', // Channel File
-        status     : true, // check login status
-        cookie     : true, // enable cookies to allow the server to access the session
-        xfbml      : true  // parse XFBML
-      });
+      FB.init(settings.facebook);
       // listen for and handle auth.statusChange events
       FB.Event.subscribe('auth.statusChange', function(response) {
         if (response.authResponse) {
           // user has auth'd your app and is logged into Facebook
           FB.api('/me', function(me){
             if (me.name) {
-              console.log("---loginFB success: " + JSON.stringify(me));
-              //document.getElementById('auth-displayname').innerHTML = me.name;
+              logger.info("---loginFB success: " + JSON.stringify(me));
+              app.trigger("authenticated", me);
             }
           });
-          //document.getElementById('auth-loggedout').style.display = 'none';
-          //document.getElementById('auth-loggedin').style.display = 'block';
         } else {
           // user has not auth'd your app, or is not logged into Facebook
-          //document.getElementById('auth-loggedout').style.display = 'block';
-          //document.getElementById('auth-loggedin').style.display = 'none';
+          app.trigger("notAuthenticated");
         }
       });
-      // respond to clicks on the login and logout links
-      document.getElementById('login').addEventListener('click', function(){
-        Auth.loginFB();
-      });
-      //document.getElementById('auth-logoutlink').addEventListener('click', function(){
-      //  FB.logout();
-      //});
     };
   };
   Auth.loadFBSDK = function() {
@@ -17211,32 +17295,58 @@ function() {
   Auth.loginFB = function() {
     FB.login(function(response) {
       if (response.authResponse) {
-        console.log('Welcome!  Fetching your information.... ');
+        logger.info('Welcome!  Fetching your information.... ');
         FB.api('/me', function(response) {
-          console.log('Good to see you, ' + response.name + '.');
-          console.log("---FB.login response: " + JSON.stringify(response));
+          logger.info('Good to see you, ' + response.name + '.');
+          logger.info("---FB.login response: " + JSON.stringify(response));
         });
       } else {
-        console.log('User cancelled login or did not fully authorize.');
+        logger.info('User cancelled login or did not fully authorize.');
       }
     });
   };
   return Auth;
 });
 
+define('views/auth',[
+  "app",
+  "backbone",
+  "auth"
+],
+function(app, Backbone, authModule) {
+  var Auth = Backbone.View.extend({
+    template: "auth",
+    events: {
+      "click div#login": "login"
+    },
+    login: function() {
+      authModule.loginFB();
+    }
+  });
+  return Auth;
+});
 
-define('modules/views/main',[
+
+define('views/main',[
   "app",
   "backbone"
 ],
 
 function(app, Backbone) {
   
+  var logger = app.logging.getLogger("views/main.js");
+
   var Main = Backbone.View.extend({
     template: "main",
+    // TODO: move into a layout based view
     initialize: function() {
       this.subviews = [];
+      // TODO: implement this in a Backbone fashion
+      //document.getElementById('auth-logoutlink').addEventListener('click', function(){
+      //  FB.logout();
+      //});
     },
+    // TODO: move into a layout based view
     addSubview: function(view, container) {
       container = container || "#main";
       this.subviews.push({
@@ -17244,9 +17354,14 @@ function(app, Backbone) {
         container: container
       });
     },
+    // TODO: move into a layout based view
     render: function() {
       var self = this;
-      Backbone.View.prototype.render.call(this);
+      logger.info("rendering main view with app.user: " + JSON.stringify(app.user.toJSON()));
+      var context = {
+        user: app.user.toJSON()
+      };
+      Backbone.View.prototype.render.call(this, context);
       self.subviews.forEach(function(subview) {
         self.$el.find(subview.container).html(subview.view.render().el);
       });
@@ -17254,11 +17369,72 @@ function(app, Backbone) {
     }
   });
 
-  app.Views = app.Views || {};
-  app.Views.Main = Main;
-
   return Main;
 
+});
+
+define('views/splash',[
+  "app",
+  "backbone"
+],
+function(app, Backbone) {
+  var Splash = Backbone.View.extend({
+    template: "splash"
+  });
+  return Splash;
+});
+
+define('views/index',[
+  "./auth",
+  "./main",
+  "./splash"
+],
+function(auth, main, splash) {
+  return {
+    Auth: auth,
+    Main: main,
+    Splash: splash
+  };
+});
+
+define('models/user',[
+  "app",
+  "backbone"
+],
+
+function(app, Backbone) {
+
+  var logger = app.logging.getLogger("/models/user.js");
+
+  var User = Backbone.Model.extend({
+    loadFBUser: function(fbuser) {
+      this.set({
+        fbid: fbuser.id,
+        name: {
+          full: fbuser.name,
+          first: fbuser.first_name,
+          last: fbuser.last_name
+        }
+      });
+      logger.info("loadFBUser for user: " + fbuser.id);
+      return this;
+    }
+  });
+
+  app.Models = app.Models || {};
+  app.Models.User = User;
+
+  return User;
+
+});
+
+define('models/index',[
+  "./user"
+],
+function(user) {
+  return {
+    User: user
+  };
 });
 
 //
@@ -17273,19 +17449,32 @@ require([
   "jquery",
   "backbone",
   // Modules
-  "modules/auth",
-  "modules/views/main"
+  "auth",
+  "views/index",
+  "models/index",
+  "lib/logging"
 ],
 
-function(app, $, Backbone, Auth) {
+function(app, $, Backbone, Auth, Views, Models, logging) {
 
-  // register modules
-  app.Auth = Auth;
+  var logger = logging.getLogger("main.js");
 
   // init FB Auth
-  app.Auth.initFBAuth();
-  app.Auth.loadFBSDK();
+  Auth.initFBAuth();
+  Auth.loadFBSDK();
 
+  // app events
+  app.on("authenticated", function(fbuser) {
+    var user = new Models.User();
+    user.loadFBUser(fbuser);
+    app.user = user;
+    var mainView = new Views.Main();
+    $("#container").html(mainView.render().el);
+  });
+  app.on("notAuthenticated", function() {
+    var authView = new Views.Auth();
+    $("#container").html(authView.render().el);
+  });
 
   // Defining the application router, you can attach sub routers here.
   var Router = Backbone.Router.extend({
@@ -17293,12 +17482,9 @@ function(app, $, Backbone, Auth) {
       "": "index"
     },
     index: function() {
-      var authView = new app.Views.Auth();
-      var mainView = new app.Views.Main();
-      mainView.addSubview(authView);
-      $("#container").html(mainView.render().el);
-      app.views = app.views || {};
-      app.views.main = mainView;
+      logger.info("inside index route");
+      var splashView = new Views.Splash();
+      $("#container").html(splashView.render().el);
     }
   });
 

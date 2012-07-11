@@ -2,7 +2,7 @@
 define([
   "app",
   "backbone",
-  "modules/auth"
+  "auth"
 ],
 function(app, Backbone, authModule) {
   var Auth = Backbone.View.extend({

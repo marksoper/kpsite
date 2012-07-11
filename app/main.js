@@ -11,19 +11,32 @@ require([
   "jquery",
   "backbone",
   // Modules
-  "modules/auth",
-  "modules/views/main"
+  "auth",
+  "views/index",
+  "models/index",
+  "lib/logging"
 ],
 
-function(app, $, Backbone, Auth) {
+function(app, $, Backbone, Auth, Views, Models, logging) {
 
-  // register modules
-  app.Auth = Auth;
+  var logger = logging.getLogger("main.js");
 
   // init FB Auth
-  app.Auth.initFBAuth();
-  app.Auth.loadFBSDK();
+  Auth.initFBAuth();
+  Auth.loadFBSDK();
 
+  // app events
+  app.on("authenticated", function(fbuser) {
+    var user = new Models.User();
+    user.loadFBUser(fbuser);
+    app.user = user;
+    var mainView = new Views.Main();
+    $("#container").html(mainView.render().el);
+  });
+  app.on("notAuthenticated", function() {
+    var authView = new Views.Auth();
+    $("#container").html(authView.render().el);
+  });
 
   // Defining the application router, you can attach sub routers here.
   var Router = Backbone.Router.extend({
@@ -31,12 +44,9 @@ function(app, $, Backbone, Auth) {
       "": "index"
     },
     index: function() {
-      var authView = new app.Views.Auth();
-      var mainView = new app.Views.Main();
-      mainView.addSubview(authView);
-      $("#container").html(mainView.render().el);
-      app.views = app.views || {};
-      app.views.main = mainView;
+      logger.info("inside index route");
+      var splashView = new Views.Splash();
+      $("#container").html(splashView.render().el);
     }
   });
 

@@ -2,10 +2,13 @@ define([
   // Libs
   "jquery",
   "lodash",
-  "backbone"
+  "backbone",
+  "lib/logging"
 ],
 
-function($, _, Backbone) {
+function($, _, Backbone, logging) {
+
+  var logger = logging.getLogger("app.js");
 
   var templatePath = "app/templates/";
 
@@ -43,21 +46,21 @@ function($, _, Backbone) {
 
       // Ensure a normalized return value.
       return JST[path];
-    },
-
-    // Create a custom object with a nested Views object
-    module: function(additionalProps) {
-      return _.extend({ Views: {} }, additionalProps);
     }
 
   // Mix Backbone.Events into the app object.
   }, Backbone.Events);
 
-  Backbone.View.prototype.render = function() {
-    var html = app.fetchTemplate(this.template)();
+  Backbone.View.prototype.render = function(context) {
+    var html = app.fetchTemplate(this.template)(context);
     this.$el.html(html);
     return this;
   };
+
+  //
+  // logging
+  //
+  app.logging = logging;
 
   //
   // TODO: global reference for dev purposes -- remove this
